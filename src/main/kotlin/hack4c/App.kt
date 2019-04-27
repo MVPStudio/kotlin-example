@@ -3,13 +3,22 @@
  */
 package hack4c
 
-class App {
-    val greeting: String
-        get() {
-            return "Hello world."
-        }
-}
+import io.ktor.application.call
+import io.ktor.http.ContentType
+import io.ktor.response.respondText
+import io.ktor.routing.get
+import io.ktor.routing.routing
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
 
-fun main(args: Array<String>) {
-    println(App().greeting)
+fun main() {
+    val server = embeddedServer(Netty, port = 8080) {
+        routing {
+            get("/") {
+                call.respondText("Hello World!", ContentType.Text.Plain)
+            }
+        }
+    }
+    println("\n\nServer running on port 8080\n\n")
+    server.start(wait = true)
 }
