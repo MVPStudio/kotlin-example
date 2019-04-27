@@ -1,0 +1,68 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stage-kotlin-example-deployment
+  namespace: kotlin-example
+  labels:
+    app: kotlin-example
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kotlin-example
+  template:
+    metadata:
+      labels:
+        app: kotlin-example
+    spec:
+      containers:
+        - name: web-server
+          image: mvpstudio/kotlin-example:0a4c050
+          resources:
+            limits:
+              cpu: 0.25
+              memory: 250Mi
+            requests:
+              cpu: 0.25
+              memory: 250Mi
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SOME_ENV_VAR
+              value: foo
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kotlin-example-web
+  namespace: kotlin-example
+  annotations:
+    getambassador.io/config: |
+      ---
+      apiVersion: ambassador/v0
+      kind: Mapping
+      name: kotlin-example-mapping
+      host: kotlin-example.stage.apps.mvpstudio.org
+      prefix: /
+      service: kotlin-example-web.kotlin-example
+      ---
+      apiVersion: ambassador/v0
+      kind: TLSContext
+      name: stage-kotlin-example-tls
+      hosts:
+      - kotlin-example.stage.apps.mvpstudio.org
+      secret: stage-apps-cert
+spec:
+  selector:
+    app: kotlin-example
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+---
